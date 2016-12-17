@@ -664,6 +664,7 @@ void scale_image(image m, float s)
     for(i = 0; i < m.h*m.w*m.c; ++i) m.data[i] *= s;
 }
 
+
 image crop_image(image im, int dx, int dy, int w, int h)
 {
     image cropped = make_image(w, h, im.c);
