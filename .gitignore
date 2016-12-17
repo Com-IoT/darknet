@@ -22,3 +22,9 @@ ehthumbs.db
 Icon?
 Thumbs.db
 *.swp
+/jnet19.weights
+/extraction.weights
+/jnet19_448.weights
+/tiny-yolo-voc.weights
+/yolo.weights
+/tiny-yolo.weights

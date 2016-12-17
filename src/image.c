@@ -217,6 +217,14 @@ void draw_detections(image im, int num, float thresh, box *boxes, float **probs,
             if(top < 0) top = 0;
             if(bot > im.h-1) bot = im.h-1;
 
+
+            if(top >= im.h*0.5 && bot <= im.h-10){
+            	image croppedimage = crop_image(im, left, top, right-left, bot-top);
+            	char str[50];
+				sprintf(str, "%d",rand());
+            	save_image(croppedimage, str);
+            }
+
             draw_box_width(im, left, top, right, bot, width, red, green, blue);
             if (alphabet) {
                 image label = get_label(alphabet, names[class], (im.h*.03)/10);
