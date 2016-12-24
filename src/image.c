@@ -4,6 +4,7 @@
 #include "cuda.h"
 #include <stdio.h>
 #include <math.h>
+#include "dangerarea.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -177,6 +178,110 @@ image **load_alphabet()
     return alphabets;
 }
 
+void crop_detections(image im, int num, float thresh, box *boxes, float **probs, char **names, int classes, OPENALPR *alpr, image **alphabet)
+{
+
+
+    int i;
+
+    float red = 0;
+	float green = 255;
+	float blue = 0;
+	float rgb[3];
+
+	//width = prob*20+2;
+
+	rgb[0] = red;
+	rgb[1] = green;
+	rgb[2] = blue;
+    for(i = 0; i < num; ++i){
+        int class = max_index(probs[i], classes);
+        float prob = probs[i][class];
+        if(prob > thresh){
+
+            int width = im.h * .012;
+
+            box b = boxes[i];
+
+            int left  = (b.x-b.w/2.)*im.w;
+            int right = (b.x+b.w/2.)*im.w;
+            int top   = (b.y-b.h/2.)*im.h;
+            int bot   = (b.y+b.h/2.)*im.h;
+
+            if(left < 0) left = 0;
+            if(right > im.w-1) right = im.w-1;
+            if(top < 0) top = 0;
+            if(bot > im.h-1) bot = im.h-1;
+
+
+            /*if(right <=50 && top >=0
+                        		|| right <=150 && top >=100
+                        		|| right <=250 && top >=200
+                        		|| right <=350 && top >=300
+                        		|| right <=450 && top >=400)*/
+            //if(right <=125 && top>=100)
+            if(top>=650 && bot <im.h)
+            {
+            	image croppedimage = crop_image(im, left, top, right-left, bot-top);
+
+            	struct AlprCRegionOfInterest roi;
+            	roi.x = 0;
+            	roi.y = 0;
+            	roi.width=croppedimage.w;
+            	roi.height=croppedimage.h;
+
+            	unsigned char *data = calloc(croppedimage.w*croppedimage.h*croppedimage.c, sizeof(char));
+            	int i,k;
+            	for(k = 0; k < croppedimage.c; ++k){
+            		for(i = 0; i < croppedimage.w*croppedimage.h; ++i){
+            			data[i*croppedimage.c+k] = (unsigned char) (255*croppedimage.data[i + k*croppedimage.w*croppedimage.h]);
+            	    }
+            	}
+            	int len;
+            	unsigned char *png = stbi_write_png_to_mem((unsigned char *) data, croppedimage.w*croppedimage.c, croppedimage.w, croppedimage.h, croppedimage.c, &len);
+
+
+            	char plateTextResult[256];
+
+            	json_error_t error;
+            	json_t *json;
+            	json = json_loads(openalpr_recognize_encodedimage(alpr, png, len,roi),0,&error);
+            	int found=0;
+            	if(json_is_object(json)){
+            		json_t *results;
+            		results = json_object_get(json, "results");
+            		if(json_is_array(results)){
+            			for(i = 0; i < json_array_size(results) && !found; i++)
+            			{
+            				json_t *singleResult;
+            				singleResult = json_array_get(results,i);
+            				if(json_is_object(singleResult)){
+            					json_t *plate, *matches_template, *confidence;
+            					plate = json_object_get(singleResult,"plate");
+            					matches_template =json_object_get(singleResult,"matches_template");
+            					confidence =json_object_get(singleResult,"confidence");
+            					if(json_integer_value(matches_template)){
+            					//if(1){
+            						sprintf(plateTextResult, "%s", json_string_value(plate));
+            						found=1;
+            					}
+            				}
+            			}
+            		}
+            	}
+
+            	STBIW_FREE(png);
+            	free(data);
+
+            	if (alphabet) {
+            		image label = get_label(alphabet, plateTextResult, (im.h*.03)/10);
+            		draw_label(im, top + width, left, label, rgb);
+				}
+            }
+        }
+    }
+}
+
 void draw_detections(image im, int num, float thresh, box *boxes, float **probs, char **names, image **alphabet, int classes)
 {
     int i;
@@ -193,7 +298,7 @@ void draw_detections(image im, int num, float thresh, box *boxes, float **probs,
                 alphabet = 0;
             }
 
-            printf("%s: %.0f%%\n", names[class], prob*100);
+            //printf("%s: %.0f%%\n", names[class], prob*100);
             int offset = class*123457 % classes;
             float red = get_color(2,offset,classes);
             float green = get_color(1,offset,classes);
@@ -218,18 +323,41 @@ void draw_detections(image im, int num, float thresh, box *boxes, float **probs,
             if(bot > im.h-1) bot = im.h-1;
 
 
-            if(top >= im.h*0.5 && bot <= im.h-10){
+            /*if(right <=50 && top >=0
+            		|| right <=150 && top >=100
+            		|| right <=250 && top >=200
+            		|| right <=350 && top >=300
+            		|| right <=450 && top >=400)*/
+            if(right <=125 && top>=100)
+            {
+            	red = 255;
+                green = 0;
+                blue = 0;
+                rgb[0] = red;
+                rgb[1] = green;
+                rgb[2] = blue;
+                /*image croppedimage = crop_image(im, left, top, right-left, bot-top);
+
+                //DO ANPR HERE
+                //openalpr_recognize_rawimage(alpr, )
+                //END APR
+                char str[50];
+                sprintf(str, "%d",rand());
+                save_image(croppedimage, str);*/
+            }
+            /*if(top >= im.h*0.5 && bot <= im.h-10){
             	image croppedimage = crop_image(im, left, top, right-left, bot-top);
             	char str[50];
 				sprintf(str, "%d",rand());
             	save_image(croppedimage, str);
-            }
+            }*/
 
             draw_box_width(im, left, top, right, bot, width, red, green, blue);
-            if (alphabet) {
+            //draw_box_width(im, 0, 650, 1600, 1200, width, 0,255,0);
+            /*if (alphabet) {
                 image label = get_label(alphabet, names[class], (im.h*.03)/10);
                 draw_label(im, top + width, left, label, rgb);
-            }
+            }*/
         }
     }
 }

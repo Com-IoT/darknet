@@ -8,6 +8,7 @@
 #include "image.h"
 #include "demo.h"
 #include <sys/time.h>
+#include "alpr_c.h"
 
 #define FRAMES 3
 
@@ -36,7 +37,7 @@ static float *predictions[FRAMES];
 static int demo_index = 0;
 static image images[FRAMES];
 static float *avg;
-static int inbound=0;
+OPENALPR *alpr;
 
 void *fetch_in_thread(void *ptr)
 {
@@ -69,15 +70,84 @@ void *detect_in_thread(void *ptr)
         error("Last layer must produce detections\n");
     }
     if (nms > 0) do_nms(boxes, probs, l.w*l.h*l.n, l.classes, nms);
-    printf("\033[2J");
-    printf("\033[1;1H");
+    //printf("\033[2J");
+    //printf("\033[1;1H");
     printf("\nFPS:%.1f\n",fps);
-    printf("Objects:\n\n");
+    //printf("Objects:\n\n");
 
     images[demo_index] = det;
     det = images[(demo_index + FRAMES/2 + 1)%FRAMES];
     demo_index = (demo_index + 1)%FRAMES;
 
+    //if(dangerareas){
+
+
+
+
+
+
+
+
+
+
+    		int width = det.h * .012;
+        	float red = 255;
+        	float green = 0;
+        	float blue = 0;
+        	float rgb[3];
+
+        		            //width = prob*20+2;
+
+        	rgb[0] = red;
+        	rgb[1] = green;
+        	rgb[2] = blue;
+
+        	int left1  = 0;
+        	int right1 = 125;
+        	int top1   = 100;
+        	int bot1   = 400;
+
+        /*if(left1 < 0) left1 = 0;
+        	if(right1 > det.w-1) right1 = det.w-1;
+        	if(top1 < 0) top1 = 0;
+        	if(bot1 > det.h-1) bot1 = det.h-1;*/
+
+        	//draw_box_width(det, left1, top1, right1, bot1, width, red, green, blue);
+
+        	int left2  = 0;
+        	int right2 = 100;
+        	int top2   = 125;
+        	int bot2   = 250;
+        	//draw_box_width(det, left2, top2, right2, bot2, width, red, green, blue);
+
+        	int left3  = 0;
+        	int right3 = 350;
+        	int top3   = 300;
+        	int bot3   = det.h;
+        	//draw_box_width(det, left3, top3, right3, bot3, width, red, green, blue);
+
+
+        	int left4  = 0;
+        	int right4 = 450;
+        	int top4   = 400;
+        	int bot4   = det.h;
+        	//draw_box_width(det, left4, top4, right4, bot4, width, red, green, blue);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    //}
+    crop_detections(det, l.w*l.h*l.n, demo_thresh, boxes, probs, demo_names, demo_classes, alpr, demo_alphabet);
     draw_detections(det, l.w*l.h*l.n, demo_thresh, boxes, probs, demo_names, demo_alphabet, demo_classes);
 
     return 0;
@@ -216,6 +286,11 @@ void demo(char *cfgfile, char *weightfile, float thresh, int cam_index, const ch
 
 void comiot_demo(char *cfgfile, char *weightfile, float thresh, int cam_index, const char *filename, char **names, int classes, int frame_skip, char *prefix)
 {
+	alpr = openalpr_init("ae", "/etc/openalpr/openalpr.conf", "/usr/local/share/openalpr/runtime_data/");
+	//openalpr_set_default_region(alpr, "ad");
+	//openalpr_set
+	//openalpr_set_topn(alpr, 20);
+	//openalpr_set_default_region(alpr, "ad");
     image **alphabet = load_alphabet();
     int delay = frame_skip;
     demo_names = names;
