@@ -260,8 +260,8 @@ void crop_detections(image im, int num, float thresh, box *boxes, float **probs,
             					plate = json_object_get(singleResult,"plate");
             					matches_template =json_object_get(singleResult,"matches_template");
             					confidence =json_object_get(singleResult,"confidence");
-            					if(json_integer_value(matches_template)){
-            					//if(1){
+            					//if(json_integer_value(matches_template)){
+            					if(1){
             						sprintf(plateTextResult, "%s", json_string_value(plate));
             						found=1;
             					}
