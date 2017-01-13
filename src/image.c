@@ -220,7 +220,16 @@ void crop_detections(image im, int num, float thresh, box *boxes, float **probs,
                         		|| right <=350 && top >=300
                         		|| right <=450 && top >=400)*/
             //if(right <=125 && top>=100)
-            if(top>=650 && bot <im.h)
+            //if(top>=650 && bot <im.h)
+            //if((right-left >200) || (bot-top>200))
+            /*{
+            	image croppedimage = crop_image(im, left, top, right-left, bot-top);
+            	char str[50];
+            	sprintf(str, "%d",rand());
+            	save_image(croppedimage, str);
+            }
+            	if(0)*/
+            if(1)
             {
             	image croppedimage = crop_image(im, left, top, right-left, bot-top);
 

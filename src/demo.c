@@ -286,7 +286,7 @@ void demo(char *cfgfile, char *weightfile, float thresh, int cam_index, const ch
 
 void comiot_demo(char *cfgfile, char *weightfile, float thresh, int cam_index, const char *filename, char **names, int classes, int frame_skip, char *prefix)
 {
-	alpr = openalpr_init("ae", "/etc/openalpr/openalpr.conf", "/usr/local/share/openalpr/runtime_data/");
+	alpr = openalpr_init("eu", "/etc/openalpr/openalpr.conf", "/usr/local/share/openalpr/runtime_data/");
 	//openalpr_set_default_region(alpr, "ad");
 	//openalpr_set
 	//openalpr_set_topn(alpr, 20);
