@@ -221,7 +221,7 @@ void crop_detections(image im, int num, float thresh, box *boxes, float **probs,
                         		|| right <=450 && top >=400)*/
             //if(right <=125 && top>=100)
             //if(top>=650 && bot <im.h)
-            //if((right-left >200) || (bot-top>200))
+            if((right-left >200) || (bot-top>200))
             /*{
             	image croppedimage = crop_image(im, left, top, right-left, bot-top);
             	char str[50];
@@ -229,7 +229,7 @@ void crop_detections(image im, int num, float thresh, box *boxes, float **probs,
             	save_image(croppedimage, str);
             }
             	if(0)*/
-            if(1)
+            //if(1)
             {
             	image croppedimage = crop_image(im, left, top, right-left, bot-top);
 
@@ -238,6 +238,11 @@ void crop_detections(image im, int num, float thresh, box *boxes, float **probs,
             	roi.y = 0;
             	roi.width=croppedimage.w;
             	roi.height=croppedimage.h;
+
+            	char plateTextResult[256];
+            	char *jsonResult;
+            	json_error_t error;
+            	json_t *json;
 
             	unsigned char *data = calloc(croppedimage.w*croppedimage.h*croppedimage.c, sizeof(char));
             	int i,k;
@@ -248,50 +253,74 @@ void crop_detections(image im, int num, float thresh, box *boxes, float **probs,
             	}
             	int len;
             	unsigned char *png = stbi_write_png_to_mem((unsigned char *) data, croppedimage.w*croppedimage.c, croppedimage.w, croppedimage.h, croppedimage.c, &len);
+            	jsonResult = openalpr_recognize_encodedimage(alpr, png, len,roi);
 
+            	/*constrain_image(croppedimage);
+            	if(croppedimage.c == 3) rgbgr_image(croppedimage);
+            	IplImage *disp = cvCreateImage(cvSize(croppedimage.w,croppedimage.h), IPL_DEPTH_8U, croppedimage.c);
+            	//printf("\nheight:%d\n",disp->height);
+            	//printf("\nwidth:%d\n",disp->width);
+            	//printf("\npixelsize:%d\n",IPL_DEPTH_8U);
+            	jsonResult = openalpr_recognize_rawimage(alpr, disp->imageData, IPL_DEPTH_8U, disp->width, disp->height, roi);*/
 
-            	char plateTextResult[256];
-char *jsonResult;
-
-            	json_error_t error;
-            	json_t *json;
-jsonResult = openalpr_recognize_encodedimage(alpr, png, len,roi);
-    printf("\nresult:%s\n",jsonResult);
+            	printf("\nresult:%s\n",jsonResult);
             	json = json_loads(jsonResult,0,&error);
             	int found=0;
+            	int x1, x2, y1, y2;
             	if(json_is_object(json)){
             		json_t *results;
             		results = json_object_get(json, "results");
             		if(json_is_array(results)){
-    printf("\nresultIsArray: yes\n");
-    printf("\nresultArraySize: %d\n", json_array_size(results));
             			for(i = 0; i < json_array_size(results) && !found; i++)
             			{
 
             				json_t *singleResult;
             				singleResult = json_array_get(results,i);
             				if(json_is_object(singleResult)){
-            					json_t *plate, *matches_template, *confidence;
+            					json_t *plate, *matches_template, *confidence, *coordinates;
             					plate = json_object_get(singleResult,"plate");
             					matches_template =json_object_get(singleResult,"matches_template");
             					confidence =json_object_get(singleResult,"confidence");
-            					//if(json_integer_value(matches_template)){
-            					if(1){
+            					if(json_integer_value(matches_template)){
+            					//if(1){
             						sprintf(plateTextResult, "%s", json_string_value(plate));
-    printf("\nplateResult:%s\n",plateTextResult);
+            						printf("\nplateResult:%s\n",plateTextResult);
+            						printf("\nplateTemplate:%d\n",json_integer_value(matches_template));
+
+            						coordinates= json_object_get(singleResult,"coordinates");
+            						for(int coords = 0; coords<json_array_size(coordinates); coords++){
+            							json_t *coordsObject = json_array_get(coordinates,coords);
+            							if(coords==0){
+            								x1 = json_integer_value(json_object_get(coordsObject, "x"));
+            								y1 = json_integer_value(json_object_get(coordsObject, "y"));
+            							}
+            							else if(coords==2){
+            								x2 = json_integer_value(json_object_get(coordsObject, "x"));
+            								y2 = json_integer_value(json_object_get(coordsObject, "y"));
+            							}
+            						}
+
+            						printf("\nplateX1:%d\n",x1);
+            						printf("\nplateY1:%d\n",y1);
+            						printf("\nplateX2:%d\n",x2);
+            						printf("\nplateY1:%d\n",y2);
+
+            						//image croppedPlate = crop_image(croppedimage, x1, y1, x2-x1, y2-y1);
+            						//save_image(croppedPlate, plateTextResult);
             						found=1;
             					}
             				}
             				if (found && alphabet) {
-            				            		image label = get_label(alphabet, plateTextResult, (im.h*.03)/10);
-            				            		draw_label(im, top + width, left, label, rgb);
-            								}
+            					//get plate coordinates
+            					image label = get_label(alphabet, plateTextResult, (im.h*.03)/10);
+            					draw_label(im, top + width, left, label, rgb);
+            				}
             			}
             		}
             	}
 
-            	STBIW_FREE(png);
-            	free(data);
+            	//STBIW_FREE(png);
+            	//free(data);
 
 
 
