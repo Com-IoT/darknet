@@ -37,7 +37,7 @@ static float *predictions[FRAMES];
 static int demo_index = 0;
 static image images[FRAMES];
 static float *avg;
-OPENALPR *alpr;
+OPENALPR *adALPR, *dxbALPR;
 
 void *fetch_in_thread(void *ptr)
 {
@@ -147,7 +147,7 @@ void *detect_in_thread(void *ptr)
 
 
     //}
-    crop_detections(det, l.w*l.h*l.n, demo_thresh, boxes, probs, demo_names, demo_classes, alpr, demo_alphabet);
+    crop_detections(det, l.w*l.h*l.n, demo_thresh, boxes, probs, demo_names, demo_classes, dxbALPR, demo_alphabet);
     draw_detections(det, l.w*l.h*l.n, demo_thresh, boxes, probs, demo_names, demo_alphabet, demo_classes);
 
     return 0;
@@ -286,7 +286,8 @@ fps = curr;
 
 void comiot_demo(char *cfgfile, char *weightfile, float thresh, int cam_index, const char *filename, char **names, int classes, int frame_skip, char *prefix)
 {
-	alpr = openalpr_init("eu", "/etc/openalpr/openalpr.conf", "/usr/local/share/openalpr/runtime_data/");
+	adALPR = openalpr_init("us", "/etc/openalpr/openalpr.conf", "/usr/local/share/openalpr/runtime_data/");
+	dxbALPR = openalpr_init("eu", "/etc/openalpr/openalpr.conf", "/usr/local/share/openalpr/runtime_data/");
 	//openalpr_set_default_region(alpr, "ad");
 	//openalpr_set
 	//openalpr_set_topn(alpr, 20);
