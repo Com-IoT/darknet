@@ -278,6 +278,7 @@ void demo(char *cfgfile, char *weightfile, float thresh, int cam_index, const ch
 
             double after = get_wall_time();
             float curr = 1./(after - before);
+fps = curr;
             before = after;
         }
     }
