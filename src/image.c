@@ -282,6 +282,10 @@ jsonResult = openalpr_recognize_encodedimage(alpr, png, len,roi);
             						found=1;
             					}
             				}
+            				if (found && alphabet) {
+            				            		image label = get_label(alphabet, plateTextResult, (im.h*.03)/10);
+            				            		draw_label(im, top + width, left, label, rgb);
+            								}
             			}
             		}
             	}
@@ -291,10 +295,7 @@ jsonResult = openalpr_recognize_encodedimage(alpr, png, len,roi);
 
 
 
-            	if (alphabet) {
-            		image label = get_label(alphabet, plateTextResult, (im.h*.03)/10);
-            		draw_label(im, top + width, left, label, rgb);
-				}
+
             }
         }
     }
