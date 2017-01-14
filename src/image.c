@@ -251,17 +251,23 @@ void crop_detections(image im, int num, float thresh, box *boxes, float **probs,
 
 
             	char plateTextResult[256];
+char *jsonResult;
 
             	json_error_t error;
             	json_t *json;
-            	json = json_loads(openalpr_recognize_encodedimage(alpr, png, len,roi),0,&error);
+jsonResult = openalpr_recognize_encodedimage(alpr, png, len,roi);
+    printf("\nresult:%s\n",jsonResult);
+            	json = json_loads(jsonResult,0,&error);
             	int found=0;
             	if(json_is_object(json)){
             		json_t *results;
             		results = json_object_get(json, "results");
             		if(json_is_array(results)){
+    printf("\nresultIsArray: yes\n");
+    printf("\nresultArraySize: %d\n", json_array_size(results));
             			for(i = 0; i < json_array_size(results) && !found; i++)
             			{
+
             				json_t *singleResult;
             				singleResult = json_array_get(results,i);
             				if(json_is_object(singleResult)){
@@ -272,6 +278,7 @@ void crop_detections(image im, int num, float thresh, box *boxes, float **probs,
             					//if(json_integer_value(matches_template)){
             					if(1){
             						sprintf(plateTextResult, "%s", json_string_value(plate));
+    printf("\nplateResult:%s\n",plateTextResult);
             						found=1;
             					}
             				}
@@ -281,6 +288,8 @@ void crop_detections(image im, int num, float thresh, box *boxes, float **probs,
 
             	STBIW_FREE(png);
             	free(data);
+
+
 
             	if (alphabet) {
             		image label = get_label(alphabet, plateTextResult, (im.h*.03)/10);
